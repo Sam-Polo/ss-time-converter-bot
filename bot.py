@@ -181,14 +181,24 @@ async def convert_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """обработчик сообщений - ищет паттерн 'конвертировать ЧЧ:ММ'"""
     try:
-        if not update.message or not update.message.text:
+        if not update.message:
+            logger.debug(f"обновление без сообщения: {update.update_id}")
             return
         
         user = update.effective_user
         chat = update.effective_chat
-        text = update.message.text
         
-        logger.debug(f"получено сообщение от пользователя {user.id} в чате {chat.id}: {text[:50]}...")
+        # логируем все входящие сообщения для отладки
+        if user and chat:
+            logger.info(f"получено сообщение от пользователя {user.id} (@{user.username if user.username else 'без username'}) в чате {chat.id} (тип: {chat.type})")
+        
+        # проверяем наличие текста
+        if not update.message.text:
+            logger.debug(f"сообщение без текста в чате {chat.id if chat else 'unknown'}")
+            return
+        
+        text = update.message.text
+        logger.info(f"текст сообщения в чате {chat.id}: {text[:100]}")
         
         # ищем паттерн "конвертировать ЧЧ:ММ" (регистронезависимо, с любыми пробелами)
         # поддерживаем: "конвертировать 00:00", "Конвертировать 15:30", "КОНВЕРТИРОВАТЬ 12:00" и т.д.
@@ -200,7 +210,7 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 hour = int(match.group(1))
                 minute = int(match.group(2))
                 
-                logger.info(f"найден паттерн конвертации в сообщении от пользователя {user.id}: {hour}:{minute}")
+                logger.info(f"найден паттерн конвертации в сообщении от пользователя {user.id} в чате {chat.id}: {hour}:{minute}")
                 
                 if not (0 <= hour <= 23 and 0 <= minute <= 59):
                     logger.warning(f"неверное время в сообщении от пользователя {user.id}: {hour}:{minute}")
@@ -208,12 +218,14 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 
                 response = convert_time(hour, minute)
                 await update.message.reply_text(response)
-                logger.info(f"ответ на сообщение отправлен пользователю {user.id}")
+                logger.info(f"ответ на сообщение отправлен пользователю {user.id} в чате {chat.id}")
                 
             except (ValueError, IndexError) as e:
                 logger.warning(f"ошибка парсинга времени из сообщения от пользователя {user.id}: {e}")
             except Exception as e:
-                logger.error(f"ошибка при обработке сообщения от пользователя {user.id}: {e}", exc_info=True)
+                logger.error(f"ошибка при обработке сообщения от пользователя {user.id} в чате {chat.id}: {e}", exc_info=True)
+        else:
+            logger.debug(f"паттерн конвертации не найден в сообщении: {text[:50]}")
                 
     except Exception as e:
         logger.error(f"критическая ошибка в обработчике сообщений: {e}", exc_info=True)
@@ -256,8 +268,12 @@ def main():
         logger.info("обработчики команд зарегистрированы: /start, /time, /convert")
         
         # регистрируем обработчик текстовых сообщений (должен быть после команд)
-        application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, message_handler))
-        logger.info("обработчик текстовых сообщений зарегистрирован")
+        # используем более широкий фильтр для работы во всех типах чатов
+        application.add_handler(MessageHandler(
+            filters.TEXT & ~filters.COMMAND & ~filters.StatusUpdate.ALL,
+            message_handler
+        ))
+        logger.info("обработчик текстовых сообщений зарегистрирован (работает во всех типах чатов)")
         
         # регистрируем обработчик ошибок
         application.add_error_handler(error_handler)
