@@ -120,7 +120,7 @@ def convert_time(hour: int, minute: int):
         date_format = "%d.%m.%Y"
         
         result = (
-            f"🕐 Конвертация времени (МСК {msk_time.strftime(time_format)}):\n\n"
+            f"🕐 Конвертация времени МСК {msk_time.strftime(time_format)}:\n\n"
             f"🇺🇿 Ташкент: {tashkent_time.strftime(time_format)} ({tashkent_time.strftime(date_format)})\n"
             f"🇦🇿 Баку: {baku_time.strftime(time_format)} ({baku_time.strftime(date_format)})\n"
             f"🌍 UTC+0: {utc_time.strftime(time_format)} ({utc_time.strftime(date_format)})"
