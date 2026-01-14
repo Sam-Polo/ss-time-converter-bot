@@ -231,6 +231,24 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         logger.error(f"критическая ошибка в обработчике сообщений: {e}", exc_info=True)
 
 
+async def log_all_updates(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """логирование всех входящих обновлений для диагностики"""
+    try:
+        if update.message:
+            user = update.effective_user
+            chat = update.effective_chat
+            msg_text = update.message.text if update.message.text else "[без текста]"
+            logger.info(f"[ВСЕ ОБНОВЛЕНИЯ] update_id={update.update_id}, чат={chat.id if chat else 'unknown'}, тип_чата={chat.type if chat else 'unknown'}, пользователь={user.id if user else 'unknown'}, текст={msg_text[:50]}")
+        elif update.edited_message:
+            logger.info(f"[ВСЕ ОБНОВЛЕНИЯ] update_id={update.update_id}, отредактированное сообщение")
+        elif update.channel_post:
+            logger.info(f"[ВСЕ ОБНОВЛЕНИЯ] update_id={update.update_id}, пост в канале")
+        else:
+            logger.debug(f"[ВСЕ ОБНОВЛЕНИЯ] update_id={update.update_id}, тип обновления не обрабатывается")
+    except Exception as e:
+        logger.debug(f"ошибка при логировании обновления: {e}")
+
+
 async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
     """обработчик всех необработанных ошибок"""
     logger.error(f"необработанная ошибка: {context.error}", exc_info=context.error)
@@ -260,6 +278,10 @@ def main():
         # создаем приложение
         application = Application.builder().token(BOT_TOKEN).build()
         logger.info("приложение telegram создано")
+        
+        # регистрируем обработчик для логирования ВСЕХ обновлений (первым, с низким приоритетом)
+        application.add_handler(MessageHandler(filters.ALL, log_all_updates), group=-1)
+        logger.info("обработчик логирования всех обновлений зарегистрирован (группа -1)")
         
         # регистрируем обработчики команд
         application.add_handler(CommandHandler("start", start))
