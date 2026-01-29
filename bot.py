@@ -40,7 +40,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         
         await update.message.reply_text(
             "Привет! Я бот для конвертации времени.\n"
-            "Напиши \"конвертировать ЧЧ:ММ\" для конвертации времени из МСК в Ташкент, Баку и UTC+0.\n"
+            "Напиши \"конвертировать ЧЧ:ММ\" для конвертации времени из МСК в Ташкент, Баку, Киев и UTC+0.\n"
             "Или используй /time."
         )
         logger.info(f"ответ на /start отправлен пользователю {user.id}")
@@ -54,7 +54,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def time_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """обработчик команды /time - конвертирует текущее время из МСК в Ташкент, Баку и UTC+0"""
+    """обработчик команды /time - конвертирует текущее время из МСК в Ташкент, Баку, Киев и UTC+0"""
     try:
         user = update.effective_user
         chat = update.effective_chat
@@ -64,6 +64,7 @@ async def time_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         msk_tz = pytz.timezone('Europe/Moscow')
         tashkent_tz = pytz.timezone('Asia/Tashkent')
         baku_tz = pytz.timezone('Asia/Baku')
+        kyiv_tz = pytz.timezone('Europe/Kiev')
         utc_tz = pytz.UTC
         
         # получаем текущее время в МСК
@@ -74,6 +75,7 @@ async def time_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         utc_time = msk_time.astimezone(utc_tz)
         tashkent_time = utc_time.astimezone(tashkent_tz)
         baku_time = utc_time.astimezone(baku_tz)
+        kyiv_time = utc_time.astimezone(kyiv_tz)
         
         # форматируем время
         time_format = "%H:%M:%S %d.%m.%Y"
@@ -82,6 +84,7 @@ async def time_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"🕐 Время (МСК {msk_time.strftime('%H:%M')}):\n\n"
             f"🇺🇿 Ташкент: {tashkent_time.strftime(time_format)}\n"
             f"🇦🇿 Баку: {baku_time.strftime(time_format)}\n"
+            f"🇺🇦 Киев: {kyiv_time.strftime(time_format)}\n"
             f"🌍 UTC+0: {utc_time.strftime(time_format)}"
         )
         
@@ -97,7 +100,7 @@ async def time_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 def convert_time(hour: int, minute: int):
-    """конвертирует время из МСК в Ташкент, Баку и UTC+0"""
+    """конвертирует время из МСК в Ташкент, Баку, Киев и UTC+0"""
     try:
         logger.debug(f"конвертация времени: {hour:02d}:{minute:02d} МСК")
         
@@ -105,6 +108,7 @@ def convert_time(hour: int, minute: int):
         msk_tz = pytz.timezone('Europe/Moscow')
         tashkent_tz = pytz.timezone('Asia/Tashkent')
         baku_tz = pytz.timezone('Asia/Baku')
+        kyiv_tz = pytz.timezone('Europe/Kiev')
         utc_tz = pytz.UTC
         
         # создаем объект времени на сегодня в МСК
@@ -115,6 +119,7 @@ def convert_time(hour: int, minute: int):
         utc_time = msk_time.astimezone(utc_tz)
         tashkent_time = utc_time.astimezone(tashkent_tz)
         baku_time = utc_time.astimezone(baku_tz)
+        kyiv_time = utc_time.astimezone(kyiv_tz)
         
         time_format = "%H:%M"
         date_format = "%d.%m.%Y"
@@ -123,10 +128,11 @@ def convert_time(hour: int, minute: int):
             f"🕐 Конвертация времени МСК {msk_time.strftime(time_format)}:\n\n"
             f"🇺🇿 Ташкент: {tashkent_time.strftime(time_format)} ({tashkent_time.strftime(date_format)})\n"
             f"🇦🇿 Баку: {baku_time.strftime(time_format)} ({baku_time.strftime(date_format)})\n"
+            f"🇺🇦 Киев: {kyiv_time.strftime(time_format)} ({kyiv_time.strftime(date_format)})\n"
             f"🌍 UTC+0: {utc_time.strftime(time_format)} ({utc_time.strftime(date_format)})"
         )
         
-        logger.debug(f"конвертация завершена успешно: МСК {hour:02d}:{minute:02d} -> Ташкент {tashkent_time.strftime(time_format)}, Баку {baku_time.strftime(time_format)}, UTC {utc_time.strftime(time_format)}")
+        logger.debug(f"конвертация завершена успешно: МСК {hour:02d}:{minute:02d} -> Ташкент {tashkent_time.strftime(time_format)}, Баку {baku_time.strftime(time_format)}, Киев {kyiv_time.strftime(time_format)}, UTC {utc_time.strftime(time_format)}")
         return result
         
     except Exception as e:
