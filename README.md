@@ -1,6 +1,6 @@
-# Telegram Time Converter Bot
+# Time Converter Bot
 
-Бот для конвертации времени из МСК в Ташкент и Баку.
+Бот для конвертации времени из МСК в Ташкент и Баку (по заказу).
 
 ## Команды
 
@@ -8,27 +8,13 @@
 - `/time` - показать текущее время в МСК, Ташкенте и Баку
 - `/convert ЧЧ:ММ` - конвертировать указанное время (например: `/convert 15:30`)
 
-## Установка
-
-1. Создайте файл `.env` с токеном бота:
+`.env`:
 ```
 BOT_TOKEN=your_bot_token_here
 ```
 
-2. Запуск через Docker Compose:
+Запуск:
 ```bash
 docker-compose up -d
-```
-
-## Деплой
-
-На сервере выполните:
-```bash
-./deploy.sh
-```
-
-Или вручную:
-```bash
-git pull && docker-compose down && docker-compose build && docker-compose up -d
 ```
 
